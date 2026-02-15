@@ -56,6 +56,11 @@
             border-color: #33ff33;
         }
         
+        button:active {
+            background-color: #00cc00;
+            border-color: #00cc00;
+        }
+        
         #score {
             font-size: 28px;
             font-weight: bold;
@@ -67,6 +72,7 @@
             color: #00ff00;
             font-size: 14px;
             line-height: 1.6;
+            margin-top: 30px;
         }
         
         .instructions kbd {
@@ -88,8 +94,8 @@
         <canvas id="gameCanvas" width="400" height="400"></canvas>
         
         <div id="controls">
-            <button onclick="startGame()">START</button>
-            <button onclick="resetGame()">RESET</button>
+            <button id="startBtn" onclick="startGame()">START</button>
+            <button id="resetBtn" onclick="resetGame()">RESET</button>
         </div>
         
         <div id="score">Score: 0</div>
@@ -113,7 +119,7 @@
         let food = {x: 15, y: 10};
         let score = 0;
         let gameRunning = false;
-        let gameLoop;
+        let animationId;
         
         function draw() {
             // Clear canvas
@@ -165,7 +171,8 @@
             // Check collision with self
             for (let i = 0; i < snake.length; i++) {
                 if (snake[i].x === head.x && snake[i].y === head.y) {
-                    resetGame();
+                    console.log('[DEBUG] Game Over - Self collision');
+                    gameOver();
                     return;
                 }
             }
@@ -177,6 +184,7 @@
                 score += 10;
                 snake.push({...head}); // Grow snake
                 generateFood();
+                console.log('[DEBUG] Food eaten! Score:', score);
             }
             
             // Remove tail if not eating
@@ -193,17 +201,59 @@
         }
         
         function startGame() {
-            if (gameRunning) return;
+            console.log('[DEBUG] START button clicked');
+            console.log('[DEBUG] gameRunning:', gameRunning);
+            console.log('[DEBUG] Snake length:', snake.length);
+            
+            // Cancel existing animation
+            if (animationId) {
+                console.log('[DEBUG] Canceling existing animation frame:', animationId);
+                cancelAnimationFrame(animationId);
+            }
+            
+            // Reset and start
             gameRunning = true;
-            resetGame();
-        }
-        
-        function resetGame() {
             snake = [{x: 10, y: 10}];
             direction = {x: 1, y: 0};
             score = 0;
             generateFood();
             draw();
+            
+            // Start game loop
+            function gameLoop() {
+                update();
+                draw();
+                if (gameRunning) {
+                    animationId = requestAnimationFrame(gameLoop);
+                }
+            }
+            
+            console.log('[DEBUG] Starting game loop...');
+            gameLoop();
+        }
+        
+        function resetGame() {
+            console.log('[DEBUG] RESET button clicked');
+            
+            // Cancel existing animation
+            if (animationId) {
+                console.log('[DEBUG] Canceling animation frame:', animationId);
+                cancelAnimationFrame(animationId);
+            }
+            
+            // Reset state
+            gameRunning = false;
+            snake = [{x: 10, y: 10}];
+            direction = {x: 1, y: 0};
+            score = 0;
+            generateFood();
+            draw();
+        }
+        
+        function gameOver() {
+            console.log('[DEBUG] Game Over! Final Score:', score);
+            gameRunning = false;
+            alert('游戏结束！得分：' + score);
         }
         
         // Keyboard controls
@@ -212,35 +262,77 @@
                 case 'ArrowUp':
                 case 'w':
                 case 'W':
-                    if (direction.y === 0) direction = {x: 0, y: -1};
+                    if (direction.y === 0) {
+                        console.log('[DEBUG] Moving UP');
+                        direction = {x: 0, y: -1};
+                    }
                     break;
                 case 'ArrowDown':
                 case 's':
                 case 'S':
-                    if (direction.y === 0) direction = {x: 0, y: 1};
+                    if (direction.y === 0) {
+                        console.log('[DEBUG] Moving DOWN');
+                        direction = {x: 0, y: 1};
+                    }
                     break;
                 case 'ArrowLeft':
                 case 'a':
                 case 'A':
-                    if (direction.x === 0) direction = {x: -1, y: 0};
+                    if (direction.x === 0) {
+                        console.log('[DEBUG] Moving LEFT');
+                        direction = {x: -1, y: 0};
+                    }
                     break;
                 case 'ArrowRight':
                 case 'd':
                 case 'D':
-                    if (direction.x === 0) direction = {x: 1, y: 0};
+                    if (direction.x === 0) {
+                        console.log('[DEBUG] Moving RIGHT');
+                        direction = {x: 1, y: 0};
+                    }
                     break;
             }
         });
         
-        // Game loop
-        function gameLoop() {
-            update();
-            draw();
-            requestAnimationFrame(gameLoop);
-        }
+        // Button controls
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('[DEBUG] DOM Content Loaded');
+            console.log('[DEBUG] START button:', document.getElementById('startBtn'));
+            console.log('[DEBUG] RESET button:', document.getElementById('resetBtn'));
+            
+            const startBtn = document.getElementById('startBtn');
+            const resetBtn = document.getElementById('resetBtn');
+            
+            if (startBtn) {
+                startBtn.addEventListener('click', function(e) {
+                    console.log('[DEBUG] START button click event triggered');
+                    e.preventDefault();
+                    startGame();
+                });
+                console.log('[DEBUG] START button event listener attached');
+            } else {
+                console.error('[DEBUG] ERROR: START button not found!');
+            }
+            
+            if (resetBtn) {
+                resetBtn.addEventListener('click', function(e) {
+                    console.log('[DEBUG] RESET button click event triggered');
+                    e.preventDefault();
+                    resetGame();
+                });
+                console.log('[DEBUG] RESET button event listener attached');
+            } else {
+                console.error('[DEBUG] ERROR: RESET button not found!');
+            }
+        });
         
-        // Start game
-        startGame();
+        // Initial draw
+        console.log('[DEBUG] Initial draw');
+        draw();
+        
+        // Don't auto-start game
+        // startGame();  // 删除这行，让用户手动点击 START
+        console.log('[DEBUG] Waiting for user to click START...');
     </script>
 </body>
 </html>
