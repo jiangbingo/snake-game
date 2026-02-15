@@ -2,8 +2,8 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Snake Game - Enhanced Version</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>Snake Game - Enhanced Version with iPad Touch Controls</title>
     <style>
         body {
             margin: 0;
@@ -15,6 +15,8 @@
             flex-direction: column;
             align-items: center;
             min-height: 100vh;
+            touch-action: manipulation; /* Prevent zoom on double-tap */
+            -webkit-tap-highlight-color: transparent;
         }
         
         h1 {
@@ -25,35 +27,81 @@
             display: flex;
             flex-direction: column;
             align-items: center;
-            gap: 15px;
-        }
-        
-        #controls {
-            display: flex;
-            flex-direction: column;
-            gap: 10px;
-            align-items: center;
-        }
-        
-        .control-row {
-            display: flex;
-            gap: 10px;
-            align-items: center;
-            justify-content: center;
+            gap: 20px;
+            width: 100%;
+            max-width: 800px;
         }
         
         #gameCanvas {
             border: 3px solid #00ff00;
             background-color: #000000;
             box-shadow: 0 0 20px rgba(0, 255, 0, 0.3);
-            transition: border 0.3s ease;
+            touch-action: none; /* Prevent scrolling on canvas */
+            max-width: 100%;
+            height: auto;
         }
         
-        #gameCanvas:hover {
+        #controls {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            align-items: center;
+            width: 100%;
+        }
+        
+        .control-row {
+            display: flex;
+            gap: 15px;
+            align-items: center;
+            justify-content: center;
+            width: 100%;
+        }
+        
+        /* Virtual D-pad for iPad */
+        #dpad {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+        
+        .dpad-row {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+        }
+        
+        .dpad-btn {
+            width: 80px;
+            height: 80px;
+            background-color: #003300;
+            color: #00ff00;
+            border: 2px solid #00ff00;
+            border-radius: 10px;
+            font-size: 24px;
+            font-weight: bold;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            user-select: none;
+            -webkit-tap-highlight-color: transparent;
+            transition: all 0.15s ease;
+        }
+        
+        .dpad-btn:active, .dpad-btn.active {
+            background-color: #00ff00;
+            color: #000000;
+            transform: scale(0.95);
+        }
+        
+        .dpad-btn:hover {
+            background-color: #004400;
             border-color: #33ff33;
-            box-shadow: 0 0 30px rgba(0, 255, 0, 0.5);
         }
         
+        /* Control buttons */
         button {
             background-color: #00ff00;
             color: #000000;
@@ -65,25 +113,19 @@
             margin: 3px;
             font-weight: bold;
             transition: all 0.2s ease;
+            -webkit-tap-highlight-color: transparent;
         }
         
-        button:hover {
+        button:active, button.active {
             background-color: #33ff33;
             border-color: #33ff33;
             transform: translateY(-2px);
             box-shadow: 0 4px 8px rgba(0, 255, 0, 0.3);
         }
         
-        button:active {
-            background-color: #00cc00;
-            border-color: #00cc00;
-            transform: translateY(0);
-        }
-        
-        button.active {
-            background-color: #000000;
-            color: #00ff00;
-            border-color: #00ff00;
+        button:hover {
+            background-color: #33ff33;
+            border-color: #33ff33;
         }
         
         select {
@@ -147,6 +189,79 @@
         .mode-info strong {
             color: #33ff33;
         }
+        
+        /* Touch instructions */
+        .touch-instructions {
+            text-align: center;
+            color: #00cc00;
+            font-size: 16px;
+            margin-top: 20px;
+            padding: 15px;
+            background-color: #001100;
+            border: 1px solid #003300;
+            border-radius: 8px;
+        }
+        
+        .touch-instructions .icon {
+            font-size: 24px;
+            margin-bottom: 10px;
+        }
+        
+        /* iPad Portrait optimization */
+        @media only screen and (orientation: portrait) and (max-width: 768px) {
+            body {
+                padding: 10px;
+            }
+            
+            #gameCanvas {
+                max-width: 90vw;
+                max-height: 90vw;
+            }
+            
+            .dpad-btn {
+                width: 70px;
+                height: 70px;
+                font-size: 28px;
+                border-radius: 12px;
+            }
+            
+            button {
+                padding: 10px 20px;
+                font-size: 18px;
+                margin: 2px;
+            }
+            
+            .control-row {
+                flex-wrap: wrap;
+                justify-content: center;
+            }
+            
+            .touch-instructions {
+                font-size: 14px;
+                padding: 10px;
+            }
+        }
+        
+        /* iPad Landscape optimization */
+        @media only screen and (orientation: landscape) and (min-width: 768px) {
+            #gameCanvas {
+                max-width: 70vw;
+                max-height: 70vw;
+            }
+            
+            .dpad-btn {
+                width: 90px;
+                height: 90px;
+                font-size: 32px;
+                border-radius: 15px;
+            }
+            
+            button {
+                padding: 14px 28px;
+                font-size: 20px;
+                margin: 5px;
+            }
+        }
     </style>
 </head>
 <body>
@@ -162,6 +277,18 @@
         </div>
         
         <canvas id="gameCanvas" width="400" height="400"></canvas>
+        
+        <!-- Virtual D-pad for iPad -->
+        <div id="dpad">
+            <div class="dpad-row">
+                <div class="dpad-btn" id="dpad-up">↑</div>
+            </div>
+            <div class="dpad-row">
+                <div class="dpad-btn" id="dpad-left">←</div>
+                <div class="dpad-btn" id="dpad-down">↓</div>
+                <div class="dpad-btn" id="dpad-right">→</div>
+            </div>
+        </div>
         
         <div id="controls">
             <div class="control-row">
@@ -191,11 +318,18 @@
                 <button onclick="setMode('endless')" id="modeEndless">Endless</button>
             </div>
         </div>
+        
+        <div class="touch-instructions">
+            <div class="icon">📱 🎮</div>
+            <strong>触摸控制</strong>
+            <p><strong>虚拟方向键</strong>：点击 ↑ ↓ ← → 按钮</p>
+            <p><strong>滑动控制</strong>：在 Canvas 上滑动控制方向</p>
+        </div>
     </div>
     
     <div class="instructions">
         <h2>Controls:</h2>
-        <p>Press START to play</p>
+        <p><strong>PC/Mac</strong>: Press START to play</p>
         <p><kbd>↑</kbd> <kbd>↓</kbd> <kbd>←</kbd> <kbd>→</kbd> or <kbd>W</kbd> <kbd>S</kbd> <kbd>A</kbd> <kbd>D</kbd></p>
         
         <h3>Game Modes:</h3>
@@ -253,6 +387,13 @@
         let currentSize = 'medium';
         let currentMode = 'classic';
         let obstacles = [];
+        
+        // Touch gesture state
+        let touchStartX = 0;
+        let touchStartY = 0;
+        let touchEndX = 0;
+        let touchEndY = 0;
+        let swipeThreshold = 30; // Minimum swipe distance
         
         // Initialize high score display
         document.getElementById('highScore').textContent = 'High Score: ' + highScore;
@@ -634,7 +775,7 @@
             document.getElementById('mode' + mode.charAt(0).toUpperCase() + mode.slice(1)).classList.add('active');
             
             // Update info
-            document.getElementById('modeInfo').textContent = 'Mode: ' + mode.charAt(0).toUpperCase() + mode.slice(1);
+            document.getElementById('modeInfo').textContent = 'Mode: ' + mode.charAt(0).toUpperCase() + mode.slice(1));
             
             // If in obstacle mode, generate obstacles
             if (mode === 'obstacles') {
@@ -645,6 +786,92 @@
             
             // Redraw
             draw();
+        }
+        
+        // Virtual D-pad controls
+        function dpadUp() {
+            console.log('[DEBUG] DPAD: UP');
+            if (direction.y === 0) {
+                direction = {x: 0, y: -1};
+                flashDpadButton('dpad-up');
+            }
+        }
+        
+        function dpadDown() {
+            console.log('[DEBUG] DPAD: DOWN');
+            if (direction.y === 0) {
+                direction = {x: 0, y: 1};
+                flashDpadButton('dpad-down');
+            }
+        }
+        
+        function dpadLeft() {
+            console.log('[DEBUG] DPAD: LEFT');
+            if (direction.x === 0) {
+                direction = {x: -1, y: 0};
+                flashDpadButton('dpad-left');
+            }
+        }
+        
+        function dpadRight() {
+            console.log('[DEBUG] DPAD: RIGHT');
+            if (direction.x === 0) {
+                direction = {x: 1, y: 0};
+                flashDpadButton('dpad-right');
+            }
+        }
+        
+        function flashDpadButton(buttonId) {
+            const button = document.getElementById(buttonId);
+            button.classList.add('active');
+            setTimeout(() => {
+                button.classList.remove('active');
+            }, 150);
+        }
+        
+        // Swipe gesture controls
+        function handleTouchStart(e) {
+            e.preventDefault();
+            touchStartX = e.touches[0].clientX;
+            touchStartY = e.touches[0].clientY;
+            console.log('[DEBUG] Touch start:', touchStartX, touchStartY);
+        }
+        
+        function handleTouchEnd(e) {
+            e.preventDefault();
+            touchEndX = e.changedTouches[0].clientX;
+            touchEndY = e.changedTouches[0].clientY;
+            
+            const deltaX = touchEndX - touchStartX;
+            const deltaY = touchEndY - touchStartY;
+            const absDeltaX = Math.abs(deltaX);
+            const absDeltaY = Math.abs(deltaY);
+            
+            console.log('[DEBUG] Touch end:', touchEndX, touchEndY);
+            console.log('[DEBUG] Delta X:', deltaX, 'Delta Y:', deltaY);
+            
+            // Check if swipe distance exceeds threshold
+            if (absDeltaX > swipeThreshold || absDeltaY > swipeThreshold) {
+                if (absDeltaX > absDeltaY) {
+                    // Horizontal swipe
+                    if (deltaX > 0) {
+                        dpadRight();
+                        console.log('[DEBUG] Swipe: RIGHT');
+                    } else {
+                        dpadLeft();
+                        console.log('[DEBUG] Swipe: LEFT');
+                    }
+                } else {
+                    // Vertical swipe
+                    if (deltaY > 0) {
+                        dpadDown();
+                        console.log('[DEBUG] Swipe: DOWN');
+                    } else {
+                        dpadUp();
+                        console.log('[DEBUG] Swipe: UP');
+                    }
+                }
+            }
         }
         
         // Keyboard controls
@@ -688,6 +915,8 @@
         // Button controls
         document.addEventListener('DOMContentLoaded', function() {
             console.log('[DEBUG] DOM Content Loaded');
+            console.log('[DEBUG] START button:', document.getElementById('startBtn'));
+            console.log('[DEBUG] RESET button:', document.getElementById('resetBtn'));
             
             const startBtn = document.getElementById('startBtn');
             const resetBtn = document.getElementById('resetBtn');
@@ -698,6 +927,7 @@
                     e.preventDefault();
                     startGame();
                 });
+                console.log('[DEBUG] START button event listener attached');
             } else {
                 console.error('[DEBUG] ERROR: START button not found!');
             }
@@ -708,10 +938,36 @@
                     e.preventDefault();
                     resetGame();
                 });
+                console.log('[DEBUG] RESET button event listener attached');
             } else {
                 console.error('[DEBUG] ERROR: RESET button not found!');
             }
         });
+        
+        // Touch controls setup
+        document.getElementById('dpad-up').addEventListener('touchstart', function(e) {
+            e.preventDefault();
+            dpadUp();
+        });
+        
+        document.getElementById('dpad-down').addEventListener('touchstart', function(e) {
+            e.preventDefault();
+            dpadDown();
+        });
+        
+        document.getElementById('dpad-left').addEventListener('touchstart', function(e) {
+            e.preventDefault();
+            dpadLeft();
+        });
+        
+        document.getElementById('dpad-right').addEventListener('touchstart', function(e) {
+            e.preventDefault();
+            dpadRight();
+        });
+        
+        // Swipe gesture controls on canvas
+        canvas.addEventListener('touchstart', handleTouchStart, {passive: false});
+        canvas.addEventListener('touchend', handleTouchEnd, {passive: false});
         
         // Initial draw
         console.log('[DEBUG] Initial draw');
